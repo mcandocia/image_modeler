@@ -69,8 +69,8 @@ def get_options():
 def main(options):
     files = [
         file for 
-        files in glob.glob(options['input'])
-        for file in files
+        files in options['input']
+        for file in glob.glob(files)
     ]
 
     conn = get_pg_conn()
