@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from scipy.interpolate import griddata
-from PIL import Image, ImageDraw
 from skimage import draw as skd
 import json
 
