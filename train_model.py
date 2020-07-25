@@ -203,7 +203,8 @@ def set_up_model_table(conn, cur):
       final_mse DOUBLE PRECISION,
       final_mae DOUBLE PRECISION, 
       training_perf_history JSON,
-      constants_json JSON
+      constants_json JSON,
+      ancestor VARCHAR(128)
     )
     """.format(**c.PG_DICT)
     logger.info('Setting up model table')
@@ -229,10 +230,12 @@ def main():
         logger.info('Creating new network')
         model = Network(loss=asymmetric_loss2)
         logger.info('Built Network')
+        ancestor = None
     else:
         logger.info('Loading model with path %s' % sys.argv[1])
         model = load_model(sys.argv[1])
         logger.info('Loaded network')
+        ancestor = sys.argv[1]
 
     logger.info('Beginning training iterations')
     test_scores = []
@@ -246,10 +249,14 @@ def main():
                 x_train, y_train = load_fetched_images(fetcher.fetch_train())
                 model.train_on_batch(x_train, y_train)
 
-            logger.info('End of training for epoch. Testing...')
+            # reduce memory strain
+            del x_train
+            del y_train
+            logger.info('End of training for epoch. Loading test data...')
             x_test, y_test = load_fetched_images(
                 fetcher.fetch_test(c.TEST_SAMPLE_SIZE)
             )
+            logger.info('Testing...')
             test_eva = model.evaluate(x_test, y_test)
             logger.debug(test_eva)
             test_scores.append(test_eva)
@@ -267,9 +274,9 @@ def main():
     model.save(model_path)
 
     insert_query = """ 
-    INSERT INTO {SCHEMA}.{MODEL_TABLENAME}(full_path, final_mse, final_mae, training_perf_history, constants_json) VALUES (%s, %s, %s, %s, %s)
-    """.format(**c.PG_DICT)
-    cur.execute(insert_query, [model_path, test_scores[-1][1], test_scores[-1][2], json.dumps(test_scores),constants_json])
+    INSERT INTO {SCHEMA}.{MODEL_TABLENAME}(full_path, final_mse, final_mae, training_perf_history, constants_json, ancestor) VALUES (%s, %s, %s, %s, %s, %s)
+    """.format( **c.PG_DICT)
+    cur.execute(insert_query, [model_path, test_scores[-1][1], test_scores[-1][2], json.dumps(test_scores),constants_json, ancestor])
     conn.commit()
     conn.close()
             
