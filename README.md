@@ -6,7 +6,11 @@ These scripts allow one to build a neural network model for purposes of predicti
 
 Each instance of this script is meant to be tuned to one specific model for training purposes.
 
+### Extra Notes
+
 Note that absolute paths are preferred when a path/file is required as input. The only exception is in the constants when a directory is indicated as a subdirectory of an already-defined directory.
+
+Also note that each of the modules has logging implemented. You can change the `Clogger` class in `utility.py` to change aspects of this.
 
 ### Future Note
 
@@ -148,3 +152,14 @@ The output will have 2 columns
 * full_path: path of the input file
 
 * score: score given to the image
+
+
+Note that if the input is a string constant, e.g.,
+
+    '*.png'
+
+the script will use `glob.glob()` to expand it.
+
+## Final Notes
+
+This script is still under development, so certain aspects aren't as refined or cemented.

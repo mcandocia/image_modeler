@@ -32,7 +32,7 @@ def get_options():
     parser = argparse.ArgumentParser(
         description = 'Run model on folder containing images'
     )
-    parser.add_argument('input', help='Glob (pattern) used to describe input files. All must be PNG files')
+    parser.add_argument('input', help='Glob (pattern) used to describe input files. All must be PNG files', nargs='+')
 
     parser.add_argument(
         '--output-filename',
@@ -67,7 +67,11 @@ def get_options():
 
 
 def main(options):
-    files = glob.glob(options['input'])
+    files = [
+        file for 
+        files in glob.glob(options['input'])
+        for file in files
+    ]
 
     conn = get_pg_conn()
     cur = conn.cursor()
@@ -105,6 +109,8 @@ def main(options):
     logger.info('Beginning image processing')
     for i, fn in enumerate(files):
         img = cv2.imread(fn, cv2.IMREAD_UNCHANGED)/fctr
+        if img.shape != c.INPUT_DIM_RGB:
+            img = cv2.resize(img, c.INPUT_DIM)
         input_data = float32([img])
         prediction = model.predict(input_data)[0][0]
         results_dict[fn] = prediction
